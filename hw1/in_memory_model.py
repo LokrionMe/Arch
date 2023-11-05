@@ -5,13 +5,13 @@ from abc import ABCMeta, abstractmethod
 class IModelChangedObserver(ABCMeta):
     @abstractmethod
     def apply_update_model(self):
-        """обноволение модели"""
+        pass
 
 
 class IModelChanger(ABCMeta):
     @abstractmethod
     def notify_change(self, sender: IModelChanger):
-        """оповещение(?)"""
+        pass
 
 
 class ModelStore(IModelChanger):
