@@ -14,7 +14,7 @@ variables:
 
 include:
   local: smoke.gitlab-ci.yml
-  remote: 
+  remote: https://github.com/LokrionMe/Arch/blob/main/CI/CD/smoke.gitlab-ci.yml
 
 cache:
   key:
