@@ -1,0 +1,94 @@
+
+image: busybox:latest
+
+stages:
+  - build
+  - test
+  - deploy
+  - stop
+  - stop previous jobs
+
+variables:
+  IMAGE_TAG: $CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA
+  CI_DEBUG_TRACE: "true"
+
+include:
+  local: smoke.gitlab-ci.yml
+  remote: 
+
+cache:
+  key:
+    files:
+      - composser.lock
+    paths:
+      - vendor/
+
+
+before_script:
+  - echo "Before script section"
+
+after_script:
+  - echo "After script section"
+
+build1:
+  stage: build
+  script:
+    - echo "do your build here"
+    - echo one >> house.txt
+    - mkdir -p vendor/
+    - echo "build" > vendor/hello.txt
+
+docker build:
+  image: docker:latest
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_PASSWORD $CI_REGISTRY
+    - echo $GITLAB_CI_USER $GITLAB_CI_PASSWORD $CI_REGISTRY $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker build -t $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
+
+test1:
+  stage: test
+  script:
+    - echo "Do a test here"
+
+deploy to stage:
+  stage: deploy
+  variables:
+    TARGET_ENV: staging
+  script:
+    - echo "do you deploy here to ${TARGET_ENV}"
+  only:
+    - main
+  environment:
+    name: staging
+    on_stop: stop to staging
+    auto_stop_in: 1 day
+
+stop to staging:
+  stage: stop
+  variables:
+    TARGET_ENV: staging
+  script:
+    - echo "STOP ${TARGET_ENV}"
+  only:
+    - main
+  when: manual
+  environment:
+    name: staging
+    action: stop
+
+
+deploy to prod:
+  stage: deploy
+  variables:
+    TARGET_ENV: prod
+  script:
+    - echo "do you deploy here to ${TARGET_ENV}"
+  only:
+    - main
+  when: manual
+  environment:
+    name: prod
